@@ -1,4 +1,4 @@
-import java.util.List;
 
-public record Graph(List<Edge> edges) {
+public class Graph extends java.util.ArrayList<Edge>{
+
 }

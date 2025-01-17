@@ -14,23 +14,66 @@ public class Main {
         }
 
         var vertices = getVerticesFromEdges(edges);
+        var verticeToConnecteds = getVerticeToConnecteds(edges);
 
         System.out.println("Entrada válida!");
         System.out.println("Arestas: " + edges);
 
-        var connectedGraphs = getConnectedGraphs(vertices, edges);
-        //System.out.println("Componentes conectados: " + connectedGraphs);
+        var connectedGraphs = getConnectedComponents(vertices, verticeToConnecteds);
+        System.out.println("Componentes conectados: " + connectedGraphs);
     }
 
-    private static List<Vertice> getVerticesFromEdges(List<Edge> edges) {
+    private static Map<Vertice, Set<Vertice>> getVerticeToConnecteds(List<Edge> edges) {
+        Map<Vertice, Set<Vertice>> verticeToConnecteds = new HashMap<>();
+
+        for(var edge : edges) {
+            if (!verticeToConnecteds.containsKey(edge.vertex1())) {
+                verticeToConnecteds.put(edge.vertex1(), new HashSet<>());
+            }
+            if (!verticeToConnecteds.containsKey(edge.vertex2())) {
+                verticeToConnecteds.put(edge.vertex2(), new HashSet<>());
+            }
+
+            verticeToConnecteds.get(edge.vertex1()).add(edge.vertex2());
+            verticeToConnecteds.get(edge.vertex2()).add(edge.vertex1());
+        }
+
+        return verticeToConnecteds;
+    }
+
+    private static Set<Vertice> getVerticesFromEdges(List<Edge> edges) {
         Set<Vertice> uniqueVertices = new HashSet<>();
         edges.forEach(edge -> uniqueVertices.addAll(List.of(edge.vertex1(), edge.vertex2())));
 
-        return new ArrayList<>(uniqueVertices);
+        return uniqueVertices;
     }
 
-    private static List<Graph> getConnectedGraphs(List<Vertice> vertices, List<Edge> edges) {
-        for(var vertice : vertices) {
+    private static List<Graph> getConnectedComponents(Set<Vertice> vertices, Map<Vertice, Set<Vertice>> verticeToConnecteds) {
+        Queue<Vertice> graphVertices = new LinkedList<>();
+        Queue<Vertice> pendingVertices = new LinkedList<>(vertices);
+        List<Graph> graphs = new ArrayList<>();
+
+        Graph currentGraph = null;
+
+        while(!graphVertices.isEmpty() || !pendingVertices.isEmpty()) {
+            if(graphVertices.isEmpty()) {
+                currentGraph = new Graph();
+                var vertice = pendingVertices.poll();
+
+                graphVertices.offer(vertice);
+            }
+            else {
+                var vertice = graphVertices.poll();
+                var connectedVertices = verticeToConnecteds
+                                            .get(vertice)
+                                            .stream()
+                                            .filter(pendingVertices::contains)
+                                            .toList();
+
+                graphVertices.addAll(connectedVertices);
+
+            }
+
 
         }
 
