@@ -58,6 +58,7 @@ public class Main {
         while(!graphVertices.isEmpty() || !pendingVertices.isEmpty()) {
             if(graphVertices.isEmpty()) {
                 currentGraph = new Graph();
+                graphs.add(currentGraph);
                 var vertice = pendingVertices.poll();
 
                 graphVertices.offer(vertice);
@@ -69,15 +70,18 @@ public class Main {
                                             .stream()
                                             .filter(pendingVertices::contains)
                                             .toList();
-
-                graphVertices.addAll(connectedVertices);
+                for(var connectedVertice : connectedVertices) {
+                    currentGraph.add(new Edge(vertice, connectedVertice));
+                    pendingVertices.remove(connectedVertice);
+                    graphVertices.offer(connectedVertice);
+                }
 
             }
 
 
         }
 
-        return null;
+        return graphs;
     }
 
     private static List<Edge> getEdgesFromInput(Scanner input) {
