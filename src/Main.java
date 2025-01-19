@@ -6,85 +6,73 @@ public class Main {
         Scanner input = new Scanner(System.in);
 
         System.out.println("Digite o conjunto de arestas: ");
-        var edges = getEdgesFromInput(input);
+        var graph = getEdgesFromInput(input);
 
-        if (edges == null) {
+        if (graph == null) {
             System.out.println("Entrada inválida!");
             return;
         }
 
-        var vertices = getVerticesFromEdges(edges);
-        var verticeToConnecteds = getVerticeToConnecteds(edges);
-
         System.out.println("Entrada válida!");
-        System.out.println("Arestas: " + edges);
+        System.out.println("Arestas: " + graph);
 
-        var connectedGraphs = getConnectedComponents(vertices, verticeToConnecteds);
-        System.out.println("Componentes conectados: " + connectedGraphs);
-    }
+        var connectedComponents = getConnectedComponents(graph);
+        System.out.println("Componentes conexos: ");
 
-    private static Map<Vertice, Set<Vertice>> getVerticeToConnecteds(List<Edge> edges) {
-        Map<Vertice, Set<Vertice>> verticeToConnecteds = new HashMap<>();
-
-        for(var edge : edges) {
-            if (!verticeToConnecteds.containsKey(edge.vertex1())) {
-                verticeToConnecteds.put(edge.vertex1(), new HashSet<>());
-            }
-            if (!verticeToConnecteds.containsKey(edge.vertex2())) {
-                verticeToConnecteds.put(edge.vertex2(), new HashSet<>());
-            }
-
-            verticeToConnecteds.get(edge.vertex1()).add(edge.vertex2());
-            verticeToConnecteds.get(edge.vertex2()).add(edge.vertex1());
+        int count = 0;
+        for (var connectedComponent : connectedComponents) {
+            count++;
+            System.out.println("Grafo " + count + ": " + connectedComponent);
         }
 
-        return verticeToConnecteds;
+        if(connectedComponents.size() == 1 && isEulerian(graph)) {
+            System.out.println("O grafo é euleriano!");
+        }
+        else {
+            System.out.println("O grafo não é euleriano!");
+        }
     }
 
-    private static Set<Vertice> getVerticesFromEdges(List<Edge> edges) {
-        Set<Vertice> uniqueVertices = new HashSet<>();
-        edges.forEach(edge -> uniqueVertices.addAll(List.of(edge.vertex1(), edge.vertex2())));
-
-        return uniqueVertices;
+    private static boolean isEulerian(Graph graph) {
+        return graph.getVerticesCopy().stream()
+                .noneMatch(vertice -> graph.getAdjacenciesCopy(vertice).size() % 2 != 0);
     }
 
-    private static List<Graph> getConnectedComponents(Set<Vertice> vertices, Map<Vertice, Set<Vertice>> verticeToConnecteds) {
+    private static List<Graph> getConnectedComponents(Graph graph) {
         Queue<Vertice> graphVertices = new LinkedList<>();
-        Queue<Vertice> pendingVertices = new LinkedList<>(vertices);
+        Set<Vertice> pendingVertices = graph.getVerticesCopy();
         List<Graph> graphs = new ArrayList<>();
 
         Graph currentGraph = null;
 
-        while(!graphVertices.isEmpty() || !pendingVertices.isEmpty()) {
-            if(graphVertices.isEmpty()) {
+        while (!graphVertices.isEmpty() || !pendingVertices.isEmpty()) {
+            if (graphVertices.isEmpty()) {
                 currentGraph = new Graph();
                 graphs.add(currentGraph);
-                var vertice = pendingVertices.poll();
 
+                var vertice = pendingVertices.iterator().next();
+                pendingVertices.remove(vertice);
                 graphVertices.offer(vertice);
-            }
-            else {
+            } else {
                 var vertice = graphVertices.poll();
-                var connectedVertices = verticeToConnecteds
-                                            .get(vertice)
-                                            .stream()
-                                            .filter(pendingVertices::contains)
-                                            .toList();
-                for(var connectedVertice : connectedVertices) {
-                    currentGraph.add(new Edge(vertice, connectedVertice));
-                    pendingVertices.remove(connectedVertice);
-                    graphVertices.offer(connectedVertice);
+                pendingVertices.remove(vertice);
+
+                var adjacentVertices = graph.getAdjacenciesCopy(vertice)
+                        .stream()
+                        .filter(pendingVertices::contains)
+                        .toList();
+
+                for (var adjacentVertice : adjacentVertices) {
+                    currentGraph.addEdge(new Edge(vertice, adjacentVertice));
+                    graphVertices.offer(adjacentVertice);
                 }
-
             }
-
-
         }
 
         return graphs;
     }
 
-    private static List<Edge> getEdgesFromInput(Scanner input) {
+    private static Graph getEdgesFromInput(Scanner input) {
         String inputLine = input.nextLine();
 
         if (!inputLine.matches("((\\[[^,\\[\\]]+,[^,\\[\\]]+\\]).*)*")) {
@@ -94,7 +82,7 @@ public class Main {
         String[] rawEdges = inputLine.replaceAll("^\\[|\\]$", "")
                 .split("\\]([^]])*\\[");
 
-        List<Edge> edges = new ArrayList<>();
+        Graph graph = new Graph();
         for (var rawEdge : rawEdges) {
             String[] vertices = rawEdge.split(",");
             if (vertices.length != 2) {
@@ -104,9 +92,9 @@ public class Main {
             var v1 = new Vertice(vertices[0].trim());
             var v2 = new Vertice(vertices[1].trim());
 
-            edges.add(new Edge(v1, v2));
+            graph.addEdge(new Edge(v1, v2));
         }
 
-        return edges;
+        return graph;
     }
 }
