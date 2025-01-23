@@ -31,6 +31,21 @@ public class Main {
         else {
             System.out.println("O grafo não é euleriano!");
         }
+
+        if(isComplete(graph)) {
+            System.out.println("O grafo é completo!");
+        }
+        else {
+            System.out.println("O grafo não é completo!");
+        }
+    }
+
+    private static boolean isComplete(Graph graph) {
+        var vertices = graph.getVerticesCopy();
+        int numOfVertices = vertices.size();
+
+        return vertices.stream()
+                .allMatch(vertice -> graph.getAdjacenciesCopy(vertice).size() == numOfVertices - 1);
     }
 
     private static boolean isEulerian(Graph graph) {
