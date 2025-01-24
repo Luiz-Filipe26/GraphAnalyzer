@@ -1,4 +1,6 @@
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Main {
 
@@ -94,18 +96,13 @@ public class Main {
             return null;
         }
 
-        String[] rawEdges = inputLine.replaceAll("^\\[|\\]$", "")
-                .split("\\]([^]])*\\[");
+        Pattern edgePattern = Pattern.compile("\\[([^,\\[\\]]+),([^,\\[\\]]+)\\]");
+        Matcher matcher = edgePattern.matcher(inputLine);
 
         Graph graph = new Graph();
-        for (var rawEdge : rawEdges) {
-            String[] vertices = rawEdge.split(",");
-            if (vertices.length != 2) {
-                return null;
-            }
-
-            var v1 = new Vertice(vertices[0].trim());
-            var v2 = new Vertice(vertices[1].trim());
+        while (matcher.find()) {
+            var v1 = new Vertice(matcher.group(1).trim());
+            var v2 = new Vertice(matcher.group(2).trim());
 
             graph.addEdge(new Edge(v1, v2));
         }
